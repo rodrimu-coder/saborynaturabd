@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Stock & Ventas SaboryNatura</title>
+<style>
+  :root{--bg:#0b0f14;--card:#121821;--muted:#94a3b8;--text:#e5e7eb;--accent:#22c55e;--danger:#ef4444;--warn:#f59e0b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Inter,Arial,sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:16px;padding-bottom:130px}
+  .app-title{font-weight:800;font-size:20px;letter-spacing:.2px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .tabs{display:flex;gap:8px;overflow:auto;padding-bottom:8px;margin-top:12px}
+  .tab{flex:1;white-space:nowrap;background:#19212e;border:1px solid #1f2937;color:#cbd5e1;padding:12px 10px;border-radius:12px;font-weight:600;text-align:center;cursor:pointer}
+  .tab.active{background:#233043;border-color:#2d3b50;color:#fff}
+  .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:14px;margin-bottom:12px}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media(max-width:640px){.g2,.g4{grid-template-columns:1fr}}
+  label{font-size:13px;color:#cbd5e1;display:block;margin-bottom:4px}
+  input,select{width:100%;padding:12px;border-radius:12px;border:1px solid #2a3649;background:#0f1520;color:#e5e7eb;font-size:14px}
+  input[type="number"]{appearance:textfield}
+  input:focus,select:focus{outline:none;border-color:#3b5270}
+  button{appearance:none;border:0;border-radius:12px;padding:12px 14px;font-weight:700;cursor:pointer;font-size:14px}
+  .btn{background:#2a8346;color:white}
+  .btn.secondary{background:#334155;color:#e5e7eb}
+  .btn.warn{background:var(--warn);color:#0b0f14}
+  .btn.danger{background:#ef4444;color:white}
+  .btn.sm{padding:7px 11px;font-size:12px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .mini{font-size:12px;color:#9aa9bf}
+  .pill{padding:5px 10px;border-radius:999px;background:#1f2937;color:#cbd5e1;font-size:12px;white-space:nowrap}
+  .pill.green{background:#14532d;color:#86efac}
+  .pill.blue{background:#1e3a5f;color:#93c5fd}
+  .pill.yellow{background:#422006;color:#fde68a}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-bottom:1px solid #1f2937;text-align:left;font-size:13px}
+  th{color:#a3b5cc;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  .right{text-align:right}
+  .ok{color:var(--accent)}
+  .warn-t{color:var(--warn)}
+  .danger-t{color:var(--danger)}
+  .muted{color:#94a3b8}
+  .notice{background:#1c2e1c;border:1px solid #22c55e44;color:#86efac;padding:10px 14px;border-radius:12px;margin-bottom:12px;font-size:13px}
+  .alert{background:#2e1f1c;border:1px solid #ef444444;color:#fca5a5;padding:10px 14px;border-radius:12px;margin-bottom:12px;font-size:13px}
+  .sep{border:none;border-top:1px solid #1f2937;margin:12px 0}
+  .prod-card{background:#0f1520;border:1px solid #1f2937;border-radius:12px;padding:12px}
+  .prod-card .prod-name{font-weight:700;font-size:14px;text-transform:capitalize;margin-bottom:8px}
+  .prod-card .stock-num{font-size:24px;font-weight:800;line-height:1}
+  .prod-card .stock-label{font-size:11px;color:#9aa9bf;margin-top:2px}
+  .footer{position:fixed;bottom:0;left:0;right:0;backdrop-filter:blur(10px);background:rgba(11,15,20,.9);padding:10px 16px;border-top:1px solid #1f2937;z-index:100}
+  .footer .bar{display:flex;gap:8px;flex-wrap:wrap;max-width:960px;margin:0 auto}
+  .help{font-size:11px;color:#64748b;max-width:960px;margin:5px auto 0}
+  .tscroll{overflow-x:auto}
+
+  /* Sync indicator */
+  #syncStatus{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border-radius:999px;background:#1f2937}
+  #syncStatus.ok{background:#14532d;color:#86efac}
+  #syncStatus.warn{background:#422006;color:#fde68a}
+  #syncStatus.err{background:#3b1515;color:#fca5a5}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* Config screen */
+  #configScreen{position:fixed;inset:0;background:#0b0f14;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+  #configScreen .box{background:#121821;border:1px solid #1f2937;border-radius:20px;padding:28px;max-width:560px;width:100%}
+  #configScreen h2{margin:0 0 6px;font-size:22px}
+  #configScreen p{color:#94a3b8;font-size:13px;margin:0 0 18px;line-height:1.6}
+  #configScreen .step{background:#0f1520;border:1px solid #1a2535;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px;line-height:1.7}
+  #configScreen .step b{color:#e5e7eb}
+  #configScreen .step code{background:#1f2937;padding:2px 6px;border-radius:6px;font-family:monospace;font-size:12px;color:#93c5fd}
+  #configScreen input{margin-bottom:10px}
+  #configScreen .step a{color:#60a5fa;text-decoration:none}
+  #configScreen .step a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<!-- ── Pantalla de configuración Firebase ───────────────────────────────── -->
+<div id="configScreen">
+  <div class="box">
+    <h2>🔥 Configurar Firebase</h2>
+    <p>Para sincronizar entre dispositivos necesitas crear un proyecto Firebase gratuito y pegar tu configuración aquí. Solo se hace una vez.</p>
+
+    <div class="step">
+      <b>Paso 1</b> — Ve a <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> e inicia sesión con tu Gmail.
+    </div>
+    <div class="step">
+      <b>Paso 2</b> — Haz clic en <b>"Agregar proyecto"</b>, ponle un nombre (ej: <code>sabornatura</code>) y créalo (puedes desactivar Analytics).
+    </div>
+    <div class="step">
+      <b>Paso 3</b> — Dentro del proyecto, haz clic en el ícono <b>&lt;/&gt; Web</b>, registra la app y copia el objeto <code>firebaseConfig</code>.
+    </div>
+    <div class="step">
+      <b>Paso 4</b> — Ve a <b>Firestore Database → Crear base de datos</b> en modo <b>producción</b>. Luego en la pestaña <b>Reglas</b> pega esto y publica:<br>
+      <code style="display:block;margin-top:6px;padding:8px;line-height:1.6">
+        rules_version = '2';<br>
+        service cloud.firestore {<br>
+        &nbsp; match /databases/{database}/documents {<br>
+        &nbsp;&nbsp;&nbsp; match /{document=**} {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; allow read, write: if true;<br>
+        &nbsp;&nbsp;&nbsp; }<br>
+        &nbsp; }<br>
+        }
+      </code>
+    </div>
+    <div class="step">
+      <b>Paso 5</b> — Pega aquí el contenido de tu <code>firebaseConfig</code> (el objeto JSON completo):
+    </div>
+
+    <label>firebaseConfig (pega el JSON aquí)</label>
+    <input id="cfgInput" placeholder='{ "apiKey": "...", "authDomain": "...", ... }' style="font-family:monospace;font-size:12px;padding:10px">
+    <div id="cfgError" style="color:#fca5a5;font-size:12px;margin-bottom:8px;display:none"></div>
+    <button class="btn" id="cfgSave" style="width:100%">Conectar y guardar →</button>
+    <div style="margin-top:10px;text-align:center">
+      <button class="btn secondary sm" id="cfgSkip">Usar sin nube (solo este dispositivo)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── App principal ─────────────────────────────────────────────────────── -->
+<div class="wrap" id="appWrap" style="display:none">
+  <div class="app-title">
+    🧀🥚 Stock & Ventas
+    <span class="pill" id="weekTag"></span>
+    <span id="syncStatus" class="warn"><span class="sync-dot"></span> Conectando…</span>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div id="views"></div>
+</div>
+
+<div class="footer" id="appFooter" style="display:none">
+  <div class="bar">
+    <button class="btn secondary sm" id="exportCsv">CSV</button>
+    <button class="btn secondary sm" id="exportJson">Exportar JSON</button>
+    <label class="btn secondary sm" for="importJson" style="cursor:pointer">Importar JSON</label>
+    <input id="importJson" type="file" accept="application/json" style="display:none"/>
+    <button class="btn warn sm" id="rollWeek">+ Nueva semana</button>
+    <button class="btn danger sm" id="wipeAll">Borrar todo</button>
+    <button class="btn secondary sm" id="btnConfig">⚙️ Firebase</button>
+  </div>
+  <div class="help" id="helpText">Cargando…</div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {
+  getFirestore, doc, setDoc, getDoc, onSnapshot, deleteDoc
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ─── Constantes ───────────────────────────────────────────────────────────────
+const CFGKEY   = 'qy-firebase-cfg';
+const LOCALKEY = 'qy-app-v90';
+const DOCPATH  = 'app/sabornatura'; // doc único en Firestore
+const PRODUCTS = ['mantecoso','chanco','huevos','mantequilla'];
+
+// ─── Utilidades ───────────────────────────────────────────────────────────────
+function uuid(){ try{return crypto.randomUUID();}catch(e){} return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+const $  = (s,p) => (p||document).querySelector(s);
+const fmt = n => new Intl.NumberFormat('es-CL',{minimumFractionDigits:0}).format(Math.round(Number(n||0)));
+const q2  = n => Math.round((Number(n||0)+Number.EPSILON)*100)/100;
+const today = () => new Date().toISOString();
+const iso   = d => new Date(d).toISOString().slice(0,10);
+
+function startOfWeek(d){
+  const x = d ? new Date(d) : new Date();
+  const day = (x.getDay()+6)%7;
+  x.setHours(0,0,0,0); x.setDate(x.getDate()-day); return x;
+}
+const addDays = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+
+// ─── Estado global ───────────────────────────────────────────────────────────
+let db = null;      // datos de la app
+let fsdb = null;    // instancia Firestore
+let useCloud = false;
+let unsubscribe = null;
+
+// ─── Persistencia ────────────────────────────────────────────────────────────
+function loadLocal(){ try{ return JSON.parse(localStorage.getItem(LOCALKEY))||{}; }catch(e){ return{}; } }
+function saveLocal(d){ localStorage.setItem(LOCALKEY, JSON.stringify(d)); }
+
+async function saveData(d){
+  saveLocal(d);
+  if(useCloud && fsdb){
+    try{
+      setSyncStatus('saving');
+      await setDoc(doc(fsdb, 'app','sabornatura'), d);
+      setSyncStatus('ok');
+    }catch(e){
+      console.error('Firestore save error',e);
+      setSyncStatus('err');
+    }
+  }
+}
+
+function setSyncStatus(state){
+  const el = $('#syncStatus'); if(!el) return;
+  el.className = state==='ok'?'ok pill':state==='err'?'err pill':'warn pill';
+  el.innerHTML = {
+    ok:     '<span class="sync-dot"></span> Sincronizado',
+    saving: '<span class="sync-dot"></span> Guardando…',
+    err:    '<span class="sync-dot"></span> Error de red',
+    warn:   '<span class="sync-dot"></span> Sin nube',
+    connecting: '<span class="sync-dot"></span> Conectando…'
+  }[state]||'';
+}
+
+// ─── Lógica DB ────────────────────────────────────────────────────────────────
+function freshWeek(data, carryover){
+  const co={};
+  PRODUCTS.forEach(p => co[p] = carryover ? q2(carryover[p]||0) : 0);
+  return {
+    id: uuid(),
+    startISO: startOfWeek().toISOString(),
+    costs: Object.fromEntries(PRODUCTS.map(p=>[p,(data?.masterCosts?.[p])||0])),
+    newStock: Object.fromEntries(PRODUCTS.map(p=>[p,0])),
+    carryover: co
+  };
+}
+
+function ensureDB(data){
+  if(!data.meta)        data.meta = {version:'9.0', createdAt:today()};
+  if(!data.masterCosts) data.masterCosts = Object.fromEntries(PRODUCTS.map(p=>[p,0]));
+  if(!data.weeks)       data.weeks = [];
+  if(!data.sales)       data.sales = [];
+  if(!currentWeek(data)){
+    data.weeks.push(freshWeek(data,null));
+  }
+  return data;
+}
+
+const currentWeek  = d => (d.weeks||[]).find(w => iso(w.startISO)===iso(startOfWeek()));
+const salesInWeek  = (d,w) => (d.sales||[]).filter(s=>{
+  const t=new Date(s.ts), a=new Date(w.startISO), b=addDays(a,7);
+  return t>=a && t<b;
+});
+
+function weekInitial(w,p){ return q2(q2(w.carryover?.[p]||0)+q2(w.newStock?.[p]||0)); }
+function weekSold(d,w,p){
+  return q2(salesInWeek(d,w).filter(s=>s.product===p).reduce((a,s)=>a+q2(s.qty),0));
+}
+function weekRemaining(d,w,p){ return q2(Math.max(0, weekInitial(w,p)-weekSold(d,w,p))); }
+function availableStock(d,p){
+  const wk=currentWeek(d); if(!wk) return 0;
+  return weekRemaining(d,wk,p);
+}
+
+// ─── UI helpers ───────────────────────────────────────────────────────────────
+function setWeekTag(){
+  const wk=currentWeek(db); if(!wk) return;
+  const end=addDays(new Date(wk.startISO),6);
+  const tag=$('#weekTag');
+  if(tag) tag.textContent=iso(wk.startISO)+' → '+iso(end);
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+const TABS=[
+  {id:'stock',  name:'📦 Stock'},
+  {id:'venta',  name:'💰 Nueva venta'},
+  {id:'resumen',name:'📊 Resumen'},
+  {id:'hist',   name:'📋 Historial'},
+  {id:'weeks',  name:'🗓 Semanas'},
+];
+
+let activeTab = 'stock';
+function renderTabs(active){
+  activeTab = active;
+  const c=$('#tabs'); c.innerHTML='';
+  TABS.forEach(t=>{
+    const b=document.createElement('button');
+    b.className='tab'+(t.id===active?' active':'');
+    b.textContent=t.name;
+    b.onclick=()=>{ renderTabs(t.id); renderView(t.id); };
+    c.appendChild(b);
+  });
+}
+function renderView(id){
+  ({stock:renderStock,venta:renderVenta,resumen:renderResumen,hist:renderHist,weeks:renderWeeks})[id]?.();
+}
+function refreshView(){ renderView(activeTab); setWeekTag(); }
+
+// ─── STOCK ────────────────────────────────────────────────────────────────────
+function renderStock(){
+  const wk=currentWeek(db); setWeekTag();
+  const v=$('#views'); v.innerHTML='';
+  if(!wk){ v.innerHTML='<div class="alert">No hay semana activa.</div>'; return; }
+
+  const hasCarry=PRODUCTS.some(p=>q2(wk.carryover?.[p]||0)>0);
+  if(hasCarry){
+    const n=document.createElement('div'); n.className='notice';
+    n.innerHTML=`↩ <b>Hay stock arrastrado de la semana anterior.</b> Revisa, agrega stock nuevo y guarda.`;
+    v.appendChild(n);
+  }
+
+  const card=document.createElement('div'); card.className='card';
+  card.innerHTML=`
+    <div style="font-weight:800;margin-bottom:4px">Stock semana actual</div>
+    <div class="mini" style="margin-bottom:14px">Total disponible = sobrante + nuevo.</div>
+    <div id="stockForm"></div>
+    <hr class="sep">
+    <div class="row">
+      <button class="btn" id="saveWeek">Guardar y recalcular</button>
+      <button class="btn secondary" id="saveDefaults">Guardar costos por defecto</button>
+    </div>`;
+  v.appendChild(card);
+
+  const form=$('#stockForm');
+  PRODUCTS.forEach(p=>{
+    const carry=q2(wk.carryover?.[p]||0);
+    const newSt=q2(wk.newStock?.[p]||0);
+    const total=q2(carry+newSt);
+    const sold=weekSold(db,wk,p);
+    const remaining=q2(Math.max(0,total-sold));
+    const blk=document.createElement('div');
+    blk.style.cssText='margin-bottom:16px;padding:12px;background:#0a0e15;border-radius:12px;border:1px solid #1a2535';
+    blk.innerHTML=`
+      <div style="font-weight:700;font-size:14px;text-transform:capitalize;margin-bottom:10px">
+        ${p} <span class="pill ${remaining>0?'green':''}" style="margin-left:6px">Disponible: ${remaining.toFixed(2)}</span>
+      </div>
+      <div class="grid g4" style="gap:10px">
+        <div><label>↩ Sobrante arrastrado</label><input type="number" min="0" step="0.01" id="carry_${p}" value="${carry}"></div>
+        <div><label>🛒 Nuevo comprado</label><input type="number" min="0" step="0.01" id="new_${p}" value="${newSt}"></div>
+        <div><label>💵 Costo unitario</label><input type="number" min="0" step="0.01" id="cost_${p}" value="${wk.costs?.[p]||0}"></div>
+        <div><label>📤 Vendido esta semana</label><input type="number" value="${sold.toFixed(2)}" disabled style="opacity:.5;cursor:not-allowed"></div>
+      </div>
+      <div class="mini" style="margin-top:6px">
+        Total inicial = ${carry.toFixed(2)} sobrante + ${newSt.toFixed(2)} nuevo = <b>${total.toFixed(2)}</b>
+        · Costo default: $${fmt(db.masterCosts?.[p]||0)}
+      </div>`;
+    form.appendChild(blk);
+  });
+
+  $('#saveWeek').onclick=async()=>{
+    const cur=currentWeek(db);
+    PRODUCTS.forEach(p=>{
+      cur.carryover[p]=q2($(`#carry_${p}`).value||0);
+      cur.newStock[p] =q2($(`#new_${p}`).value||0);
+      cur.costs[p]    =q2($(`#cost_${p}`).value||0);
+    });
+    await saveData(db);
+    alert('Stock actualizado.');
+    renderTabs('resumen'); renderResumen();
+  };
+
+  $('#saveDefaults').onclick=async()=>{
+    const cur=currentWeek(db);
+    PRODUCTS.forEach(p=>db.masterCosts[p]=q2(cur.costs?.[p]||0));
+    await saveData(db); alert('Costos por defecto actualizados.');
+  };
+}
+
+// ─── REGISTRAR VENTA ─────────────────────────────────────────────────────────
+function renderVenta(){
+  setWeekTag();
+  const v=$('#views'); v.innerHTML='';
+  const card=document.createElement('div'); card.className='card grid';
+  card.innerHTML=`
+    <div style="font-weight:800">Nueva venta</div>
+    <div class="grid g2">
+      <div><label>Comprador</label><input id="buyer" placeholder="Nombre o negocio"></div>
+      <div><label>Producto</label><select id="product">${PRODUCTS.map(p=>`<option>${p}</option>`).join('')}</select></div>
+      <div><label>Cantidad</label><input type="number" id="qty" min="0.01" step="0.01" value="0.50"></div>
+      <div><label>Total venta ($)</label><input type="number" id="total" min="0" step="1" value="0"></div>
+      <div><label>Estado de pago</label><select id="status"><option>pagado</option><option>pendiente</option><option>parcial</option></select></div>
+      <div><label>Monto pagado (si parcial)</label><input type="number" id="paid" min="0" step="1" value="0"></div>
+      <div><label>Entregado</label><select id="delivered"><option value="true">Sí</option><option value="false">No</option></select></div>
+    </div>
+    <div id="saleInfo" style="padding:10px;background:#0a0e15;border-radius:10px;border:1px solid #1a2535"></div>
+    <div class="row"><button class="btn" id="saveSale">Guardar venta</button></div>`;
+  v.appendChild(card);
+
+  function updateInfo(){
+    const qty=q2($('#qty').value||0), total=q2($('#total').value||0);
+    const unit=qty>0?q2(total/qty):0;
+    const prod=$('#product').value;
+    const disp=availableStock(db,prod);
+    const ok=disp>=qty;
+    $('#saleInfo').innerHTML=`
+      <div class="row" style="gap:16px;flex-wrap:wrap">
+        <div><div class="mini">Precio unitario</div><div style="font-weight:700">$${fmt(unit)}</div></div>
+        <div><div class="mini">Total</div><div style="font-weight:700">$${fmt(total)}</div></div>
+        <div><div class="mini">Stock disponible (${prod})</div><div style="font-weight:700" class="${disp>0?'ok':'danger-t'}">${disp.toFixed(2)}</div></div>
+        ${!ok&&qty>0?`<div class="mini warn-t">⚠️ Cantidad supera el stock disponible</div>`:''}
+      </div>`;
+  }
+  updateInfo();
+  ['#qty','#total'].forEach(id=>$(id).addEventListener('input',updateInfo));
+  $('#product').addEventListener('change',updateInfo);
+
+  $('#saveSale').onclick=async()=>{
+    const buyer=($('#buyer').value||'').trim();
+    const product=$('#product').value;
+    let qty=q2($('#qty').value||0); if(qty<0.01){alert('Cantidad mínima 0.01');return;}
+    const total=q2($('#total').value||0);
+    const unit=qty>0?q2(total/qty):0;
+    const status=$('#status').value;
+    const paid=q2($('#paid').value||0);
+    const delivered=$('#delivered').value==='true';
+    const wk2=currentWeek(db);
+    const disp=availableStock(db,product);
+    if(disp<qty){
+      if(!confirm(`Stock insuficiente para "${product}".\nDisponible: ${disp.toFixed(2)} · Pedido: ${qty.toFixed(2)}\n¿Registrar igual?`)) return;
+    }
+    const paidFinal=status==='pagado'?total:status==='parcial'?q2(Math.min(paid,total)):0;
+    db.sales.unshift({id:uuid(),ts:today(),buyer,product,qty,unitPrice:unit,total,status,paid:q2(paidFinal),delivered});
+    await saveData(db);
+    alert('Venta guardada.');
+    renderTabs('resumen'); renderResumen();
+  };
+}
+
+// ─── RESUMEN ─────────────────────────────────────────────────────────────────
+function renderResumen(){
+  const wk=currentWeek(db); setWeekTag();
+  const v=$('#views'); v.innerHTML='';
+  if(!wk){ v.innerHTML='<div class="alert">No hay semana activa.</div>'; return; }
+  const ventas=salesInWeek(db,wk);
+  const totals=ventas.reduce((a,s)=>(a.venta+=s.total,a.cobrado+=s.paid||0,a),{venta:0,cobrado:0});
+  totals.venta=q2(totals.venta); totals.cobrado=q2(totals.cobrado);
+  totals.porcobrar=q2(Math.max(0,totals.venta-totals.cobrado));
+  const costoSemana=PRODUCTS.reduce((acc,p)=>q2(acc+q2(wk.costs?.[p]||0)*q2(wk.newStock?.[p]||0)),0);
+  const util=q2(totals.cobrado-costoSemana);
+  const end=addDays(new Date(wk.startISO),6);
+  const top=document.createElement('div'); top.className='card';
+  top.innerHTML=`
+    <div class="mini" style="margin-bottom:10px">📅 Semana ${iso(wk.startISO)} → ${iso(end)}</div>
+    <div class="grid g4" style="gap:10px">
+      <div class="prod-card"><div class="stock-label">Ventas semana</div><div class="stock-num">$${fmt(totals.venta)}</div></div>
+      <div class="prod-card"><div class="stock-label">Cobrado</div><div class="stock-num ok">$${fmt(totals.cobrado)}</div></div>
+      <div class="prod-card"><div class="stock-label">Por cobrar</div><div class="stock-num warn-t">$${fmt(totals.porcobrar)}</div></div>
+      <div class="prod-card"><div class="stock-label">Costo stock nuevo</div><div class="stock-num">$${fmt(costoSemana)}</div></div>
+    </div>
+    <div class="prod-card" style="margin-top:10px;display:inline-flex;align-items:center;gap:12px">
+      <div><div class="stock-label">Utilidad bruta (cobrado − costo nuevo)</div>
+      <div class="stock-num ${util>=0?'ok':'danger-t'}">$${fmt(util)}</div></div>
+    </div>`;
+  v.appendChild(top);
+
+  const rows=PRODUCTS.map(p=>{
+    const carry=q2(wk.carryover?.[p]||0), nuevo=q2(wk.newStock?.[p]||0), inicial=q2(carry+nuevo);
+    const sold=weekSold(db,wk,p), disp=weekRemaining(db,wk,p);
+    const vp=q2(ventas.filter(s=>s.product===p).reduce((a,s)=>a+s.total,0));
+    const cp=q2(ventas.filter(s=>s.product===p).reduce((a,s)=>a+(s.paid||0),0));
+    const pxc=q2(Math.max(0,vp-cp));
+    const costoNuevo=q2(q2(wk.costs?.[p]||0)*nuevo);
+    const margen=q2(cp-costoNuevo);
+    return {p,carry,nuevo,inicial,sold,disp,vp,cp,pxc,costoNuevo,margen};
+  });
+
+  const det=document.createElement('div'); det.className='card';
+  det.innerHTML=`
+    <div style="font-weight:800;margin-bottom:8px">Por producto — semana actual</div>
+    <div class="tscroll"><table><thead><tr>
+      <th>Producto</th><th class="right">↩ Sobrante</th><th class="right">🛒 Nuevo</th>
+      <th class="right">= Inicial</th><th class="right">Vendido</th><th class="right">Disponible</th>
+      <th class="right">Ventas $</th><th class="right">Cobrado</th><th class="right">X cobrar</th>
+      <th class="right">Costo nuevo</th><th class="right">Margen</th>
+    </tr></thead><tbody>
+    ${rows.map(r=>`<tr>
+      <td style="text-transform:capitalize;font-weight:600">${r.p}</td>
+      <td class="right muted">${r.carry.toFixed(2)}</td>
+      <td class="right">${r.nuevo.toFixed(2)}</td>
+      <td class="right">${r.inicial.toFixed(2)}</td>
+      <td class="right">${r.sold.toFixed(2)}</td>
+      <td class="right ${r.disp<=0?'danger-t':r.disp<1?'warn-t':'ok'}">${r.disp.toFixed(2)}</td>
+      <td class="right">$${fmt(r.vp)}</td>
+      <td class="right ok">$${fmt(r.cp)}</td>
+      <td class="right ${r.pxc>0?'warn-t':''}">$${fmt(r.pxc)}</td>
+      <td class="right">$${fmt(r.costoNuevo)}</td>
+      <td class="right ${r.margen>=0?'ok':'danger-t'}">$${fmt(r.margen)}</td>
+    </tr>`).join('')}
+    </tbody></table></div>`;
+  v.appendChild(det);
+}
+
+// ─── HISTORIAL ───────────────────────────────────────────────────────────────
+function renderHist(){
+  setWeekTag();
+  const v=$('#views'); v.innerHTML='';
+  const semanas=db.weeks.slice().sort((a,b)=>new Date(b.startISO)-new Date(a.startISO));
+  let selId=currentWeek(db)?.id||semanas[0]?.id||null;
+
+  const tools=document.createElement('div'); tools.className='card';
+  tools.innerHTML=`
+    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <div style="min-width:200px"><label>Semana</label>
+        <select id="fSem">${semanas.map(w=>`<option value="${w.id}"${w.id===selId?' selected':''}>${iso(w.startISO)} → ${iso(addDays(new Date(w.startISO),6))}</option>`).join('')}</select>
+      </div>
+      <div><label>Producto</label><select id="fProd"><option value="">Todos</option>${PRODUCTS.map(p=>`<option>${p}</option>`).join('')}</select></div>
+      <div><label>Estado</label><select id="fSt"><option value="">Todos</option><option>pagado</option><option>pendiente</option><option>parcial</option></select></div>
+      <div><label>Entregado</label><select id="fDel"><option value="">Todos</option><option value="true">Sí</option><option value="false">No</option></select></div>
+      <button class="btn secondary sm" id="applyF">Filtrar</button>
+    </div>`;
+  v.appendChild(tools);
+
+  const card=document.createElement('div'); card.className='card';
+  const wrap2=document.createElement('div'); wrap2.className='tscroll';
+  const tbl=document.createElement('table');
+  tbl.innerHTML=`<thead><tr>
+    <th>Fecha</th><th>Comprador</th><th>Producto</th>
+    <th class="right">Cant.</th><th class="right">Total</th>
+    <th>Estado</th><th>Entregado</th><th class="right">Pagado</th><th></th>
+  </tr></thead><tbody></tbody>`;
+  const tbody=tbl.querySelector('tbody');
+  wrap2.appendChild(tbl); card.appendChild(wrap2); v.appendChild(card);
+
+  function paint(){
+    selId=$('#fSem').value;
+    const wSel=db.weeks.find(w=>w.id===selId);
+    let items=wSel?salesInWeek(db,wSel):[];
+    const fp=$('#fProd').value, fs=$('#fSt').value, fd=$('#fDel').value;
+    if(fp) items=items.filter(s=>s.product===fp);
+    if(fs) items=items.filter(s=>s.status===fs);
+    if(fd) items=items.filter(s=>String(!!s.delivered)===fd);
+    tbody.innerHTML=items.length?items.map(s=>`<tr>
+      <td style="white-space:nowrap">${new Date(s.ts).toLocaleString('es-CL',{dateStyle:'short',timeStyle:'short'})}</td>
+      <td>${s.buyer||'-'}</td>
+      <td style="text-transform:capitalize">${s.product}</td>
+      <td class="right">${q2(s.qty).toFixed(2)}</td>
+      <td class="right">$${fmt(q2(s.total))}</td>
+      <td>${s.status}</td>
+      <td><input type="checkbox" data-deliv="${s.id}"${s.delivered?' checked':''}></td>
+      <td class="right">$${fmt(q2(s.paid||0))}</td>
+      <td style="white-space:nowrap">
+        <button class="btn secondary sm" data-edit="${s.id}">✏️</button>
+        <button class="btn secondary sm" data-mark="${s.id}">✔</button>
+        <button class="btn danger sm" data-del="${s.id}">✕</button>
+      </td>
+    </tr>`).join(''):`<tr><td class="muted" colspan="9">No hay ventas en esta semana.</td></tr>`;
+  }
+  paint();
+  $('#applyF').onclick=paint;
+  $('#fSem').onchange=paint;
+
+  card.addEventListener('change',async e=>{
+    const cb=e.target.closest('[data-deliv]'); if(!cb) return;
+    const s=db.sales.find(x=>x.id===cb.dataset.deliv); if(!s) return;
+    s.delivered=cb.checked; await saveData(db); paint();
+  });
+
+  card.addEventListener('click',async e=>{
+    const bm=e.target.closest('[data-mark]');
+    if(bm){
+      const s=db.sales.find(x=>x.id===bm.dataset.mark);
+      if(s){s.status='pagado';s.paid=q2(s.total);} await saveData(db); paint(); return;
+    }
+    const bd=e.target.closest('[data-del]');
+    if(bd){
+      if(confirm('¿Eliminar esta venta?')){
+        db.sales=db.sales.filter(s=>s.id!==bd.dataset.del);
+        await saveData(db); paint();
+      }
+      return;
+    }
+    const be=e.target.closest('[data-edit]');
+    if(!be) return;
+    const s=db.sales.find(x=>x.id===be.dataset.edit); if(!s) return;
+    const buyer=prompt('Comprador',s.buyer||''); if(buyer===null) return;
+    let prod=prompt('Producto ('+PRODUCTS.join('/')+')',s.product); if(!prod) return;
+    prod=prod.trim().toLowerCase();
+    if(!PRODUCTS.includes(prod)){alert('Producto inválido.');return;}
+    const qty=parseFloat(prompt('Cantidad',String(q2(s.qty)))); if(!(qty>0)){alert('Cantidad inválida.');return;}
+    const total=parseFloat(prompt('Total $',String(q2(s.total)))); if(isNaN(total)){alert('Total inválido.');return;}
+    let st=prompt('Estado (pagado/pendiente/parcial)',s.status); if(!st) return;
+    st=['pagado','pendiente','parcial'].includes(st)?st:'pendiente';
+    let pd=parseFloat(prompt('Pagado $',String(q2(s.paid||0)))); if(isNaN(pd)) pd=0;
+    const del=prompt('Entregado (si/no)',s.delivered?'si':'no')?.toLowerCase()==='si';
+    const wkSale=db.weeks.find(w=>{const a=new Date(w.startISO),b=addDays(a,7),t=new Date(s.ts);return t>=a&&t<b;});
+    if(wkSale){
+      const libre=q2(weekRemaining(db,wkSale,prod)+(s.product===prod?q2(s.qty):0));
+      if(qty>libre){ if(!confirm(`Stock insuficiente.\nDisponible: ${libre.toFixed(2)} · Nuevo qty: ${qty.toFixed(2)}\n¿Registrar igual?`)) return; }
+    }
+    s.buyer=buyer; s.product=prod; s.qty=q2(qty); s.total=q2(total);
+    s.unitPrice=qty>0?q2(total/qty):0;
+    s.status=st; s.paid=st==='pagado'?q2(total):st==='parcial'?q2(Math.min(pd,total)):0;
+    s.delivered=del;
+    await saveData(db); paint();
+  });
+}
+
+// ─── SEMANAS ─────────────────────────────────────────────────────────────────
+function renderWeeks(){
+  setWeekTag();
+  const v=$('#views'); v.innerHTML='';
+  const weeks=db.weeks.slice().sort((a,b)=>new Date(b.startISO)-new Date(a.startISO));
+  const card=document.createElement('div'); card.className='card';
+  let html=`<div style="font-weight:800;margin-bottom:10px">Todas las semanas</div><div class="tscroll">
+    <table><thead><tr>
+      <th>Semana</th>
+      ${PRODUCTS.map(p=>`<th class="right" style="text-transform:capitalize">${p}<br><span class="mini">disp.</span></th>`).join('')}
+      <th class="right">Costo nuevo</th><th class="right">Ventas</th><th class="right">Diferencia</th>
+    </tr></thead><tbody>`;
+  weeks.forEach(w=>{
+    const ventas=salesInWeek(db,w).reduce((a,s)=>q2(a+s.total),0);
+    const costoNuevo=PRODUCTS.reduce((acc,p)=>q2(acc+q2(w.costs?.[p]||0)*q2(w.newStock?.[p]||0)),0);
+    const dif=q2(ventas-costoNuevo);
+    const isCur=iso(w.startISO)===iso(startOfWeek());
+    html+=`<tr style="${isCur?'background:#0f1e14':''}">
+      <td style="white-space:nowrap">${iso(w.startISO)} → ${iso(addDays(new Date(w.startISO),6))}
+        ${isCur?'<span class="pill green" style="margin-left:4px">activa</span>':''}
+      </td>
+      ${PRODUCTS.map(p=>{const d=weekRemaining(db,w,p);return `<td class="right ${d<=0?'muted':d<1?'warn-t':'ok'}">${d.toFixed(2)}</td>`;}).join('')}
+      <td class="right">$${fmt(costoNuevo)}</td>
+      <td class="right">$${fmt(ventas)}</td>
+      <td class="right ${dif>=0?'ok':'danger-t'}">$${fmt(dif)}</td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  card.innerHTML=html; v.appendChild(card);
+}
+
+// ─── EXPORT / IMPORT ─────────────────────────────────────────────────────────
+function exportCSV(){
+  const rows=[['fecha','comprador','producto','cantidad','precio_unit','total','estado','pagado','entregado']];
+  db.sales.forEach(s=>rows.push([
+    new Date(s.ts).toLocaleString('es-CL'),s.buyer||'',s.product,
+    q2(s.qty).toFixed(2),q2(s.unitPrice),q2(s.total),
+    s.status,q2(s.paid||0),s.delivered?'sí':'no'
+  ]));
+  const csv=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');
+  dl(new Blob([csv],{type:'text/csv;charset=utf-8;'}),'ventas.csv');
+}
+function exportJSON(){
+  dl(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),'datos_stock_ventas.json');
+}
+function dl(blob,name){
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url; a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(url),3000);
+}
+async function importJSON(f){
+  const r=new FileReader();
+  r.onload=async e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(!d?.weeks||!d?.sales) throw 0;
+      db=d;
+      await saveData(db);
+      alert('Datos importados.'); location.reload();
+    }catch{ alert('Archivo inválido.'); }
+  };
+  r.readAsText(f);
+}
+
+// ─── NUEVA SEMANA ────────────────────────────────────────────────────────────
+async function rollWeek(){
+  if(currentWeek(db)){
+    const wk=currentWeek(db);
+    alert(`Ya existe la semana activa (${iso(wk.startISO)} → ${iso(addDays(new Date(wk.startISO),6))}).`);
+    return;
+  }
+  if(!confirm('¿Crear nueva semana?\nEl stock sobrante se arrastrará automáticamente.')) return;
+  const semanas=db.weeks.slice().sort((a,b)=>new Date(b.startISO)-new Date(a.startISO));
+  const ant=semanas[0]||null;
+  const carry={};
+  PRODUCTS.forEach(p=>{ carry[p]=ant?weekRemaining(db,ant,p):0; });
+  const resumen=PRODUCTS.map(p=>`  ${p}: ${carry[p].toFixed(2)}`).join('\n');
+  if(!confirm(`Sobrante que se arrastrará:\n${resumen}\n¿Confirmar?`)) return;
+  db.weeks.push(freshWeek(db,carry));
+  await saveData(db);
+  renderTabs('stock'); renderStock(); setWeekTag();
+}
+
+// ─── FIREBASE INIT ───────────────────────────────────────────────────────────
+async function initFirebase(cfg){
+  try{
+    const app = initializeApp(cfg);
+    fsdb = getFirestore(app);
+    useCloud = true;
+
+    // Cargar datos desde Firestore (o subir los locales si no hay nada en la nube)
+    setSyncStatus('connecting');
+    const snap = await getDoc(doc(fsdb,'app','sabornatura'));
+    if(snap.exists()){
+      db = ensureDB(snap.data());
+    } else {
+      // Primera vez: subir datos locales
+      db = ensureDB(loadLocal());
+      await setDoc(doc(fsdb,'app','sabornatura'), db);
+    }
+    saveLocal(db);
+
+    // Suscribirse a cambios en tiempo real
+    unsubscribe = onSnapshot(doc(fsdb,'app','sabornatura'), snap2=>{
+      if(snap2.exists()){
+        db = ensureDB(snap2.data());
+        saveLocal(db);
+        setSyncStatus('ok');
+        setWeekTag();
+        // Refrescar vista actual silenciosamente
+        refreshView();
+      }
+    }, err=>{
+      console.error('Firestore listener error',err);
+      setSyncStatus('err');
+    });
+
+    setSyncStatus('ok');
+    $('#helpText').textContent = '☁️ Sincronizado con Firebase — los cambios se reflejan en todos tus dispositivos automáticamente.';
+    return true;
+  }catch(e){
+    console.error('Firebase init error',e);
+    return false;
+  }
+}
+
+// ─── PANTALLA CONFIG ─────────────────────────────────────────────────────────
+function showConfig(){
+  const saved=localStorage.getItem(CFGKEY);
+  if(saved) $('#cfgInput').value=saved;
+  $('#configScreen').style.display='flex';
+  $('#appWrap').style.display='none';
+  $('#appFooter').style.display='none';
+}
+
+function hideConfig(){
+  $('#configScreen').style.display='none';
+  $('#appWrap').style.display='block';
+  $('#appFooter').style.display='block';
+}
+
+async function startApp(){
+  const savedCfg=localStorage.getItem(CFGKEY);
+  hideConfig();
+  if(savedCfg){
+    let cfg; try{ cfg=JSON.parse(savedCfg); }catch(e){ cfg=null; }
+    if(cfg){
+      const ok=await initFirebase(cfg);
+      if(!ok){ useCloud=false; db=ensureDB(loadLocal()); setSyncStatus('warn'); }
+    } else {
+      useCloud=false; db=ensureDB(loadLocal()); setSyncStatus('warn');
+    }
+  } else {
+    useCloud=false; db=ensureDB(loadLocal()); setSyncStatus('warn');
+    $('#helpText').textContent='Datos guardados solo en este dispositivo. Pulsa ⚙️ Firebase para sincronizar.';
+  }
+  setWeekTag(); renderTabs('stock'); renderStock();
+  $('#exportCsv').onclick=exportCSV;
+  $('#exportJson').onclick=exportJSON;
+  $('#importJson').addEventListener('change',e=>{ if(e.target.files?.[0]) importJSON(e.target.files[0]); });
+  $('#rollWeek').onclick=rollWeek;
+  $('#wipeAll').onclick=async()=>{
+    if(confirm('¿Borrar todos los datos? No se puede deshacer.')){
+      db={};
+      if(useCloud&&fsdb){ try{ await deleteDoc(doc(fsdb,'app','sabornatura')); }catch(e){} }
+      localStorage.removeItem(LOCALKEY);
+      location.reload();
+    }
+  };
+  $('#btnConfig').onclick=showConfig;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+$('#cfgSave').onclick=async()=>{
+  const raw=($('#cfgInput').value||'').trim();
+  let cfg;
+  try{
+    // Soporta pegar el objeto con o sin llaves externas
+    cfg=JSON.parse(raw);
+  }catch(e){
+    $('#cfgError').textContent='JSON inválido. Copia el objeto firebaseConfig exactamente como aparece.';
+    $('#cfgError').style.display='block';
+    return;
+  }
+  if(!cfg.apiKey||!cfg.projectId){
+    $('#cfgError').textContent='Falta apiKey o projectId. Verifica que pegaste el firebaseConfig completo.';
+    $('#cfgError').style.display='block';
+    return;
+  }
+  localStorage.setItem(CFGKEY, JSON.stringify(cfg));
+  await startApp();
+};
+
+$('#cfgSkip').onclick=()=>{
+  localStorage.removeItem(CFGKEY);
+  startApp();
+};
+
+// Al cargar: si ya hay config guardada, arrancar directo
+const savedCfg=localStorage.getItem(CFGKEY);
+if(savedCfg){ startApp(); }
+// else: se muestra la pantalla de config
+
+</script>
+</body>
+</html>
